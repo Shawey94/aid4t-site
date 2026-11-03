@@ -24,7 +24,7 @@ const EXAMPLES = [
   "Get radar and damage data for the Joplin tornado",
   "EF4+ tornadoes in Oklahoma between 1999 and 2015 with mobile radar",
   "NEXRAD and HRRR within 60 km of Rolla on 2019-05-23",
-  "2013年5月 摩尔附近的雷达数据",
+  "Radar data near Moore in May 2013",
   "vortex table for El Reno 2013",
   "climatology of violent tornadoes since 2000",
   "download raw data for AID4T-20240521-IA-01",
@@ -433,7 +433,7 @@ function answerHTML(r) {
   const ctx = (r.trace || []).find((t) => t.step === "conversation_context");
   return `<div class="ask-meta">Parsed by <b>${esc(by)}</b>${p.explanation ? ` — ${esc(p.explanation)}` : ""}${ctx ? ' · <span class="ctx">uses earlier turns</span>' : ""}</div>${notes}` +
     `<div class="ans">${esc((r.answer || "").trim())}</div>${r.warning ? `<div class="ask-warn">${esc(r.warning)}</div>` : ""}` +
-    ((r.options || []).length ? `<div class="ask-opts">${r.options.map((o, i) => `<button type="button" class="ghost small opt" data-i="${i}">${esc(o.label)}</button>`).join("")}</div>${r.needs_choice && r.parsed?.understood !== false ? `<div class="ask-meta">${/[\u4e00-\u9fff]/.test(r.answer || "") ? "还没有取任何数据——请点选一个选项（也可以直接输入，如“第二个”）。" : "Nothing has been fetched yet — pick an option (or type, e.g. “the second one”)."}</div>` : ""}` : "") +
+    ((r.options || []).length ? `<div class="ask-opts">${r.options.map((o, i) => `<button type="button" class="ghost small opt" data-i="${i}">${esc(o.label)}</button>`).join("")}</div>${r.needs_choice && r.parsed?.understood !== false ? `<div class="ask-meta">${"Nothing has been fetched yet — pick an option (or type, e.g. “the second one”)."}</div>` : ""}` : "") +
     `${(r.sources || []).length ? `<div class="ask-meta">Data sources: ${r.sources.map((s) => esc(s.name + " — " + s.provider)).join(" · ")}</div>` : ""}` +
     `<div class="ask-meta">Record <a href="#" title="Ask record (full engine)">${esc(r.ask_id)}</a> (structured query, sources, code &amp; catalog versions)</div>` +
     `<details><summary>Structured query sent to AID4T Engine</summary><pre>${esc(JSON.stringify({ query: p.query, workflow: p.workflow }, null, 2))}</pre></details>` +
@@ -456,7 +456,7 @@ async function ask(text, choice) {
     const r = await api("/api/ask", { method: "POST", body: JSON.stringify({ question: q, conversation_id: CONV_ID, ...(choice ? { choice } : {}) }) });
     CONV_ID = r.conversation_id; TURNS = r.turn;
     $("#convInfo").textContent = `Conversation · ${TURNS} turn${TURNS > 1 ? "s" : ""} — follow-up questions use the earlier turns`;
-    $("#askInput").placeholder = "Ask a follow-up… e.g. “only EF4+”, “what about Missouri?”, “download the second one”, “那雷达数据呢”";
+    $("#askInput").placeholder = "Ask a follow-up… e.g. “only EF4+”, “what about Missouri?”, “download the second one”, “and the radar data?”";
     out.innerHTML = answerHTML(r);
     $$(".ask-opts .opt", out).forEach((b) => b.onclick = () => {
       const o = r.options[+b.dataset.i];

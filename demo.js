@@ -112,7 +112,7 @@
     if (hit) return { ...hit[1], conversation_id: "demo", turn: 1 };
     return { backend: "rules", conversation_id: "demo", turn: 1, ask_id: "demo",
       answer: "In this static demo, T answers the example questions below. Free-form questions and follow-ups run on the full AID4T Engine. " +
-              "You can also use the filters on the left — search runs in your browser.\n本演示版中 T 只回答下面的示例问题；自由提问请使用完整版 AID4T Engine。",
+              "You can also use the filters on the left — search runs in your browser.",
       parsed: { understood: false, query: null }, trace: [], sources: [],
       options: Object.keys(asks).map((k) => ({ label: k })) };
   }
