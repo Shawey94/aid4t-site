@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AID4T Engine</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="demo-banner"><b>Static demo</b> of AID4T Engine — a snapshot of the catalog you can search and explore. Accounts, data downloads, server-side processing and free-form Ask T run on the full engine.</div>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M4 6h24M7 11h18M10 16h12M12 21h8M14 26h4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    <div><h1>AID4T Engine</h1><p>AI-Ready Datasets for Tornado Science Discovery · Missouri S&amp;T</p></div>
+  </div>
+  <nav>
+    <span id="modeBadge" class="badge">…</span>
+    <a href="openapi.json" target="_blank">API</a>
+    <a href="llms.txt" target="_blank">For agents</a>
+    <span id="authArea"></span>
+  </nav>
+</header>
+
+<section class="ask">
+  <form id="askForm">
+    <span class="ask-label">Ask T</span>
+    <input id="askInput" autocomplete="off" placeholder="e.g. “EF4+ tornadoes in Oklahoma 2010–2015 with mobile radar” · “2013年5月 摩尔附近的雷达数据” · “vortex table for El Reno 2013”">
+    <button type="submit">Ask</button>
+  </form>
+  <div class="examples" id="examples"></div>
+  <div id="askNote" class="ask-warn" hidden></div>
+  <div id="askConv" class="ask-conv" hidden>
+    <div class="conv-head"><span id="convInfo">Conversation</span><button type="button" class="ghost small" id="newConv">New conversation</button></div>
+    <div id="askThread" class="ask-thread"></div>
+  </div>
+</section>
+
+<main class="layout">
+  <aside class="filters">
+    <form id="qForm">
+      <fieldset>
+        <legend><span class="dot ev"></span>Event</legend>
+        <label>Name / tag <input name="text" placeholder="Joplin, nocturnal…"></label>
+        <label>Event ID <input name="event_ids" placeholder="e.g. AID4T-2013…"></label>
+        <div class="row">
+          <label>EF min <select name="ef_min"><option value="">–</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label>EF max <select name="ef_max"><option value="">–</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend><span class="dot loc"></span>Location</legend>
+        <label>Place <input name="place" placeholder="Moore, Rolla, St. Louis…"></label>
+        <label>State <select name="states"><option value="">Any</option></select></label>
+        <div class="row">
+          <label>Radius (km) <input name="radius_km" type="number" value="50" min="1"></label>
+          <label>Point <input name="point" placeholder="lat, lon" readonly></label>
+        </div>
+        <div class="btns">
+          <button type="button" id="pickPoint" class="ghost">Pick point on map</button>
+          <button type="button" id="useExtent" class="ghost">Use map extent</button>
+          <button type="button" id="clearLoc" class="ghost">Clear</button>
+        </div>
+        <input type="hidden" name="bbox">
+        <p class="hint" id="bboxHint"></p>
+      </fieldset>
+      <fieldset>
+        <legend><span class="dot mod"></span>Modality</legend>
+        <div id="modList" class="mods"></div>
+        <label>Events must have
+          <select name="require"><option value="none">(don't filter)</option><option value="any">any selected</option><option value="all">all selected</option></select>
+        </label>
+      </fieldset>
+      <fieldset>
+        <legend><span class="dot time"></span>Time period (UTC)</legend>
+        <div class="row">
+          <label>From <input name="start" type="date"></label>
+          <label>To <input name="end" type="date"></label>
+        </div>
+        <div class="btns">
+          <button type="button" class="ghost preset" data-s="2013-05-01" data-e="2013-05-31">May 2013</button>
+          <button type="button" class="ghost preset" data-s="2011-01-01" data-e="2011-12-31">2011</button>
+          <button type="button" class="ghost preset" data-s="2019-01-01" data-e="2025-12-31">2019–2025</button>
+        </div>
+      </fieldset>
+      <div class="actions">
+        <button type="submit">Search</button>
+        <button type="reset" class="ghost">Reset</button>
+      </div>
+    </form>
+  </aside>
+
+  <section class="main">
+    <div id="map"></div>
+    <div class="summary" id="summary"></div>
+    <div class="panel">
+      <div class="panel-head"><h2>Events × data availability</h2>
+        <div class="legend">
+          <span class="legend-note"><span class="dot-ok"></span> available for download from AID4T Engine — click an event</span>
+        </div>
+      </div>
+      <div class="bulk">
+        <button id="bulkDl" disabled>Download data</button>
+        <label id="winLabel" hidden><input type="checkbox" id="withWindow" checked> include radar / model / satellite data for the whole place &amp; time window</label>
+        <span class="hint">Uses the data types selected under “Modality” (none selected = all available).</span>
+      </div>
+      <div class="bulk dsbuild">
+        <input id="dsObjective" placeholder="Research objective, e.g. “train a model to detect tornadogenesis from radar”">
+        <label><input type="checkbox" id="dsTornadic"> features: tornadic scans only</label>
+        <button id="dsBtn" disabled>Create AI-ready dataset</button>
+      </div>
+      <div id="bulkOut"></div>
+      <div class="tablewrap"><table id="matrix"></table></div>
+    </div>
+    <div class="panel" id="freePanel" hidden>
+      <div class="panel-head"><h2>Continuous archives for this place &amp; time window</h2></div>
+      <div id="free"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>AI-ready datasets</h2><button class="ghost small" id="refreshDs">Refresh</button></div>
+      <div id="datasets" class="jobs"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Downloads</h2><button class="ghost small" id="refreshDl">Refresh</button></div>
+      <div id="downloads" class="jobs"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Analysis jobs</h2><button class="ghost small" id="refreshJobs">Refresh</button></div>
+      <div id="jobs" class="jobs"></div>
+    </div>
+  </section>
+</main>
+
+<div id="drawer" class="drawer" hidden>
+  <div class="drawer-inner">
+    <button class="close" id="closeDrawer" aria-label="Close">×</button>
+    <div id="drawerBody"></div>
+  </div>
+</div>
+
+<div id="authModal" class="drawer modal" hidden>
+  <div class="modal-inner">
+    <button class="close" id="authClose" aria-label="Close">×</button>
+    <div id="authBody">
+      <div class="tabs"><button class="ghost small active" data-tab="login">Sign in</button><button class="ghost small" data-tab="register">Create free account</button></div>
+      <p id="authMsg" class="ask-warn"></p>
+      <form id="loginForm">
+        <label>Email <input name="email" type="email" required autocomplete="username"></label>
+        <label>Password <input name="password" type="password" required autocomplete="current-password"></label>
+        <button type="submit">Sign in</button>
+      </form>
+      <form id="registerForm" hidden>
+        <label>Email <input name="email" type="email" required></label>
+        <label>Password (min 8) <input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+        <label>Name <input name="name"></label>
+        <label>Affiliation <input name="affiliation"></label>
+        <label>Sector <select name="sector"><option value="">—</option><option>academia</option><option>government</option><option>industry</option><option>nonprofit</option><option>student</option><option>other</option></select></label>
+        <button type="submit">Create account</button>
+        <p class="hint">Browsing is open to everyone. A free account lets you download data and request processed results; it lets AID4T Engine link requests to users and report usage to NSF.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<footer>All data are fetched by AID4T Engine from the original providers and served from the AID4T Engine server; each package credits its sources. AID4T Engine is in public beta; the event catalog is being expanded.</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="data.js"></script>
+<script src="demo.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

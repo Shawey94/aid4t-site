@@ -1,0 +1,50 @@
+# AID4T Engine (AID4T: AI-Ready Datasets for Tornado Science Discovery)
+> One-stop, AI-agent-ready tornado data. Query by event, location, modality and time; run validated workflows.
+
+## Access
+Browsing and search are open. Downloads and processed results need a free account: send the personal
+API key from your account page as `X-API-Key`.
+
+## For agents
+- MCP endpoint: POST /mcp (tools: search_events, get_event_inventory, list_modalities, list_workflows, submit_job, get_job, request_download, get_download)
+- OpenAPI: /openapi.json ; human docs: /docs
+- Query: POST /api/query {event_ids,text,ef_min,ef_max,bbox,point{lat,lon,radius_km},place,states,modalities,require,start,end}
+- Downloads: POST /api/downloads {event_ids|query,modalities,free_window,hrrr_subset} → GET /api/downloads/{id}?wait=30 → GET /api/downloads/{id}/file (zip with manifest.json)
+- AI-ready federated dataset: POST /api/datasets {research_objective, query|event_ids, modalities, include_features, feature_label, include_zarr} → id + Python snippet ; GET /api/datasets/{id}/manifest.json
+- Event metadata & labels: GET /api/events/{id}/features ; search scans: GET /api/features/search?min_delta_v_kts=&label=tornadic
+- Analysis-ready Zarr: GET /api/events/{id}/arco → products + Python snippet; open with xarray.open_zarr(url, storage_options={"headers": {"X-API-Key": key}}) ; catalog: GET /api/arco
+- Jobs: POST /api/jobs {workflow,event_ids|query,params} → GET /api/jobs/{id}?wait=30 ; provenance: GET /api/jobs/{id}/provenance ; POST /api/jobs/{id}/reproduce
+- Natural language: POST /api/ask {question, conversation_id?} → answer + conversation_id (send it back for follow-ups) ; record: GET /api/asks/{ask_id}
+
+## Modalities
+- spc_track: SPC tornado track & attributes (NOAA Storm Prediction Center; event)
+- ncei_storm_events: NCEI Storm Events (narratives, damage $) (NOAA NCEI; event)
+- nexrad_l2: NWS WSR-88D Level II radar (NOAA NWS / NCEI, NOAA Open Data Dissemination (AWS); continuous)
+- mobile_radar: Mobile & rapid-scan radar (OU ARRC, CSWR/FARM, NCAR EOL, UMass, and others; event)
+- sticknet: TTU StickNet in situ probes (Texas Tech University; event)
+- chaser_media: Storm-chaser video & imagery (Community contributors (licensed); event)
+- social_media: Social-media reports (Public posts (filtered, licensed); event)
+- hrrr: HRRR 3-km analyses/forecasts (NOAA GSL / NCEP, NOAA Open Data Dissemination (AWS); continuous)
+- era5: ERA5 reanalysis (ECMWF / Copernicus C3S; continuous)
+- goes_abi: GOES ABI satellite imagery (NOAA NESDIS, NOAA Open Data Dissemination (AWS); continuous)
+- damage_dat: NWS Damage Assessment Toolkit (NOAA NWS; event)
+- damage_steer: NSF NHERI StEER reconnaissance (NSF NHERI StEER (DesignSafe); event)
+- damage_nist: NIST disaster investigations (NIST; event)
+- economic_loss: Economic loss (NOAA NCEI (Storm Events; Billion-Dollar Disasters); event)
+- social_impact: Social-impact studies (Social-science partners; event)
+- dem: Digital elevation model (USGS 3DEP) (USGS 3D Elevation Program; static)
+- buildings: Building attributes / footprints (FEMA USA Structures; county assessors; static)
+- simulation: Numerical simulations (OU, Missouri S&T) (University of Oklahoma; Missouri S&T; event)
+- lab: Laboratory experiments (Missouri S&T) (Missouri S&T; event)
+
+## Workflows
+- event_package: Data download package (fetched & staged by TDN) — TDN fetches all available data for the selected events from every source and returns one zip.
+- federated_dataset: AI-ready federated dataset — Versioned manifest for a research objective: raw data at their sources, event metadata/labels and Zarr products for every selected event (nothing copied).
+- climatology: Tornado climatology analysis — Statistics over all events matching the query.
+- nearground_wind: Near-ground wind field — Per-scan vortex signature table (TDN template) from operational/mobile radar.
+- sim_validation: Validation of numerical simulations — Compare simulated vortex evolution with radar-derived tables.
+- lab_validation: Validation of laboratory simulations — Compare tornado-simulator wind fields with field observations.
+- tornadogenesis: Tornadogenesis analysis — Pre-genesis environment and storm-scale evolution (HRRR/ERA5 + radar + in situ).
+- fragility: Tornado fragility analysis — Damage states vs estimated wind for exposed buildings.
+- resilience_planning: Tornado resilience planning — Exposure, historical hazard and loss along candidate corridors.
+- mitigation_effectiveness: Hazard-mitigation effectiveness — Compare damage outcomes for mitigated vs unmitigated structures.
