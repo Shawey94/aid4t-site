@@ -41,10 +41,7 @@ async function init() {
   $$("#examples button").forEach((b) => (b.onclick = () => { $("#askInput").value = b.textContent; $("#askForm").requestSubmit(); }));
 
   const [health, mods, wfs] = await Promise.all([api("/api/health"), api("/api/modalities"), api("/api/workflows")]);
-  const llmOk = health.llm && health.llm.ok && health.llm_backend !== "rules";
-  $("#modeBadge").textContent = `${health.mode} mode · ${health.n_events} events · Ask T: ${llmOk ? health.llm_backend + " (LLM)" : "rules only (no LLM)"}`;
-  $("#modeBadge").title = health.llm?.reason || "";
-  if (health.llm?.reason) { $("#askNote").hidden = false; $("#askNote").textContent = `LLM not in use: ${health.llm.reason}`; }
+  $("#modeBadge").textContent = `${health.n_events} events · Ask T`;
   MODS = mods.modalities; WFS = wfs; LICENSES = mods.licenses || {};
   await startVisit();
   await refreshMe();
@@ -428,10 +425,10 @@ function newConversation() {
 
 function answerHTML(r) {
   const p = r.parsed || {};
-  const by = r.backend === "rules" ? "rules parser (no LLM)" : r.backend;
-  const notes = (p.notes || []).length && r.backend !== "rules" ? `<div class="ask-warn">${p.notes.map(esc).join("<br>")}</div>` : "";
+  const by = "Ask T";
+  const notes = (p.notes || []).length && false ? `<div class="ask-warn">${p.notes.map(esc).join("<br>")}</div>` : "";
   const ctx = (r.trace || []).find((t) => t.step === "conversation_context");
-  return `<div class="ask-meta">Parsed by <b>${esc(by)}</b>${p.explanation ? ` — ${esc(p.explanation)}` : ""}${ctx ? ' · <span class="ctx">uses earlier turns</span>' : ""}</div>${notes}` +
+  return `<div class="ask-meta"><b>${esc(by)}</b>${p.explanation ? ` — ${esc(p.explanation)}` : ""}${ctx ? ' · <span class="ctx">uses earlier turns</span>' : ""}</div>${notes}` +
     `<div class="ans">${esc((r.answer || "").trim())}</div>${r.warning ? `<div class="ask-warn">${esc(r.warning)}</div>` : ""}` +
     ((r.options || []).length ? `<div class="ask-opts">${r.options.map((o, i) => `<button type="button" class="ghost small opt" data-i="${i}">${esc(o.label)}</button>`).join("")}</div>${r.needs_choice && r.parsed?.understood !== false ? `<div class="ask-meta">${"Nothing has been fetched yet — pick an option (or type, e.g. “the second one”)."}</div>` : ""}` : "") +
     `${(r.sources || []).length ? `<div class="ask-meta">Data sources: ${r.sources.map((s) => esc(s.name + " — " + s.provider)).join(" · ")}</div>` : ""}` +

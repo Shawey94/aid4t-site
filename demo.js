@@ -110,7 +110,7 @@
     const asks = await load("asks.json");
     const hit = Object.entries(asks).find(([k]) => norm(k) === norm(body.question));
     if (hit) return { ...hit[1], conversation_id: "demo", turn: 1 };
-    return { backend: "rules", conversation_id: "demo", turn: 1, ask_id: "demo",
+    return { backend: "askt", conversation_id: "demo", turn: 1, ask_id: "demo",
       answer: "In this static demo, T answers the example questions below. Free-form questions and follow-ups run on the full AID4T Engine. " +
               "You can also use the filters on the left — search runs in your browser.",
       parsed: { understood: false, query: null }, trace: [], sources: [],
