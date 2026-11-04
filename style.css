@@ -23,6 +23,7 @@ input,select{font:inherit;width:100%;padding:7px 9px;border:1px solid var(--line
 .brand{display:flex;gap:12px;align-items:center;color:var(--accent)}
 .brand h1{margin:0;font-size:22px;color:var(--ink);letter-spacing:.2px}
 .brand p{margin:2px 0 0;color:var(--muted);font-size:15px}
+.brand .logo{width:52px;height:52px;flex:none;display:block}
 nav{display:flex;gap:16px;align-items:center}
 .badge{font-size:15px;padding:3px 8px;border-radius:99px;background:var(--s-none);color:var(--muted)}
 .ask{padding:14px 24px 4px}
